@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3133045fe4a530b499ec3d9ae108a71b, type: 3}
   m_Name: Floor_01
   m_EditorClassIdentifier: 
-  id: 0
+  id: 1
   floorName: SoupStand
   unlockCost: 0
   baseIncome: 5

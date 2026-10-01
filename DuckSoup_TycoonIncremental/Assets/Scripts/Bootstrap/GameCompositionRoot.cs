@@ -1,11 +1,18 @@
+using System;
 using UnityEngine;
 
-public class GameCompositionRoot
+public class GameCompositionRoot : IDisposable
 {
     private IEventBus eventBus;
 
     private EconomyModel economyModel;
     private IEconomyService economyService;
+
+    private IProductionService productionService;
+
+    private FloorRuntimeModel floorRuntimeModel;
+    private FloorController floorController;
+
 
     public void Build()
     {
@@ -15,16 +22,33 @@ public class GameCompositionRoot
         Debug.Log("GameCompositionRoot: Dependencies created.");
     }
 
+
     private void CreateCoreServices()
     {
         eventBus = new EventBus();
     }
 
+
     private void CreateGameServices()
     {
         economyModel = new EconomyModel(new Money(100));
 
-        economyService =new EconomyService(economyModel,eventBus);
+        economyService = new EconomyService(economyModel,eventBus);
+
+        productionService = new ProductionService(economyService);
     }
 
+
+    public void InitializeGameplay(FloorDefinitionSO definition, FloorView view)
+    {
+        floorRuntimeModel = new FloorRuntimeModel(definition.Id, true);
+
+        floorController = new FloorController(definition, floorRuntimeModel, view, productionService);
+    }
+
+
+    public void Dispose()
+    {
+        floorController?.Dispose();
+    }
 }

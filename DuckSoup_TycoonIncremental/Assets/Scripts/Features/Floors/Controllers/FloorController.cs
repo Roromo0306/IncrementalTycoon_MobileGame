@@ -51,7 +51,9 @@ public class FloorController : IDisposable
 
         view.SetProgress(runtimeModel.Progress);
 
-        view.SetGenerateButtonInteractable(runtimeModel.IsUnlocked);
+        bool canGenerate =runtimeModel.IsUnlocked && runtimeModel.AutomaticTimeRemaining <= 0f;
+
+        view.SetGenerateButtonInteractable(canGenerate);
 
         view.SetUpgradeButtonInteractable(false);
     }
