@@ -14,7 +14,7 @@ public class FloorStateMachine
     public bool CanGenerate => currentState.CanGenerate;
 
 
-    public FloorStateMachine(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, IProductionService productionService)
+    public FloorStateMachine(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, IProductionService productionService, ITimeService timeService)
     {
         if (definition == null)
         {
@@ -31,11 +31,28 @@ public class FloorStateMachine
             throw new ArgumentNullException(nameof(productionService));
         }
 
+        if (timeService == null)
+        {
+            throw new ArgumentNullException(nameof(timeService));
+        }
+
         lockedState = new FloorLockedState();
 
-        manualState = new FloorManualState(this, definition, runtimeModel, productionService);
+        manualState = new FloorManualState(
+                this,
+                definition,
+                runtimeModel,
+                productionService,
+                timeService
+            );
 
-        automaticState = new FloorAutomaticState(definition, runtimeModel);
+        automaticState = new FloorAutomaticState(
+                this,
+                definition,
+                runtimeModel,
+                productionService,
+                timeService
+            );
 
         if (runtimeModel.IsUnlocked)
         {
@@ -51,6 +68,12 @@ public class FloorStateMachine
     public void HandleGenerate()
     {
         currentState.HandleGenerate();
+    }
+
+
+    public void Tick()
+    {
+        currentState.Tick();
     }
 
 
@@ -72,11 +95,13 @@ public class FloorStateMachine
     }
 
 
-    private void ChangeState(IFloorState newState)
+    private void ChangeState(
+        IFloorState newState)
     {
         currentState?.Exit();
 
-        currentState = newState;
+        currentState =
+            newState;
 
         currentState.Enter();
     }

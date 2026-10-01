@@ -18,4 +18,9 @@ public class FloorLockedState : IFloorState
     public void HandleGenerate()
     {
     }
+
+    public void Tick()
+    {
+
+    }
 }

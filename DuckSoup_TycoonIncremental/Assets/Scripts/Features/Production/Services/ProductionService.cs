@@ -23,31 +23,28 @@ public class ProductionService : IProductionService
             throw new ArgumentNullException(nameof(runtimeModel));
         }
 
-        AddManualProgress(definition, runtimeModel);
+        float newProgress = runtimeModel.Progress + definition.ProgressPerTap;
+
+        runtimeModel.SetProgress(newProgress);
 
         if (runtimeModel.Progress < 1f)
         {
             return false;
         }
 
-        CompleteManualProduction(
-            definition
-        );
+        economyService.AddMoney(definition.BaseIncome);
 
         return true;
     }
 
 
-    private void AddManualProgress(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel)
+    public void GenerateAutomaticIncome(FloorDefinitionSO definition)
     {
-        float newProgress = runtimeModel.Progress + definition.ProgressPerTap;
+        if (definition == null)
+        {
+            throw new ArgumentNullException(nameof(definition));
+        }
 
-        runtimeModel.SetProgress(newProgress);
-    }
-
-
-    private void CompleteManualProduction(FloorDefinitionSO definition)
-    {
         economyService.AddMoney(definition.BaseIncome);
     }
 }

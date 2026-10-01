@@ -10,25 +10,43 @@ public class FloorController : IDisposable
     private bool isDisposed;
 
 
-    public FloorController(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, FloorView view, FloorStateMachine stateMachine)
+    public FloorController(
+        FloorDefinitionSO definition,
+        FloorRuntimeModel runtimeModel,
+        FloorView view,
+        FloorStateMachine stateMachine)
     {
-        this.definition = definition ?? throw new ArgumentNullException(nameof(definition));
+        this.definition = definition
+            ?? throw new ArgumentNullException(
+                nameof(definition)
+            );
 
-        this.runtimeModel = runtimeModel ?? throw new ArgumentNullException(nameof(runtimeModel));
+        this.runtimeModel = runtimeModel
+            ?? throw new ArgumentNullException(
+                nameof(runtimeModel)
+            );
 
-        this.view = view ?? throw new ArgumentNullException(nameof(view));
+        this.view = view
+            ?? throw new ArgumentNullException(
+                nameof(view)
+            );
 
-        this.stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
+        this.stateMachine = stateMachine
+            ?? throw new ArgumentNullException(
+                nameof(stateMachine)
+            );
 
         SubscribeToView();
 
-        Render();
+        RenderStaticData();
+        RenderDynamicData();
     }
 
 
     private void SubscribeToView()
     {
-        view.GeneratePressed += OnGeneratePressed;
+        view.GeneratePressed +=
+            OnGeneratePressed;
     }
 
 
@@ -36,21 +54,53 @@ public class FloorController : IDisposable
     {
         stateMachine.HandleGenerate();
 
-        Render();
+        RenderDynamicData();
     }
 
 
-    public void Render()
+    public void Tick()
     {
-        view.SetIncome(definition.BaseIncome.ToFormattedString());
+        stateMachine.Tick();
 
-        view.SetProgress(runtimeModel.Progress);
+        RenderDynamicData();
+    }
 
-        view.SetGenerateButtonInteractable(stateMachine.CanGenerate);
 
-        view.SetUpgradeButtonInteractable(false);
+    private void RenderStaticData()
+    {
+        view.SetIncome(
+            definition.BaseIncome
+                .ToFormattedString()
+        );
 
-        UnityEngine.Debug.Log($"Floor State: {stateMachine.CurrentStateType}");
+        view.SetUpgradeButtonInteractable(
+            false
+        );
+    }
+
+
+    private void RenderDynamicData()
+    {
+        view.SetProgress(
+            runtimeModel.Progress
+        );
+
+        view.SetGenerateButtonInteractable(
+            stateMachine.CanGenerate
+        );
+
+        bool isAutomatic =
+            stateMachine.CurrentStateType
+            == FloorStateType.Automatic;
+
+        view.SetAutomaticVisual(
+            isAutomatic
+        );
+
+        view.SetAutomaticTime(
+            runtimeModel.AutomaticTimeRemaining,
+            isAutomatic
+        );
     }
 
 
@@ -61,7 +111,8 @@ public class FloorController : IDisposable
             return;
         }
 
-        view.GeneratePressed -= OnGeneratePressed;
+        view.GeneratePressed -=
+            OnGeneratePressed;
 
         isDisposed = true;
     }

@@ -3,56 +3,79 @@ using UnityEngine.SceneManagement;
 
 public class GameBootstrapper : MonoBehaviour
 {
-    private const string GameSceneName = "Game";
+    private const string GameSceneName =
+        "Game";
 
     private GameCompositionRoot compositionRoot;
 
 
     private void Awake()
     {
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(
+            gameObject
+        );
 
         InitializeGame();
     }
 
 
-    private void InitializeGame()
+    private void Update()
     {
-        compositionRoot =new GameCompositionRoot();
-
-        compositionRoot.Build();
-
-        SceneManager.sceneLoaded += OnSceneLoaded;
-
-        SceneManager.LoadScene(GameSceneName);
+        compositionRoot?.Tick();
     }
 
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+    private void InitializeGame()
+    {
+        compositionRoot =
+            new GameCompositionRoot();
+
+        compositionRoot.Build();
+
+        SceneManager.sceneLoaded +=
+            OnSceneLoaded;
+
+        SceneManager.LoadScene(
+            GameSceneName
+        );
+    }
+
+
+    private void OnSceneLoaded(
+        Scene scene,
+        LoadSceneMode loadSceneMode)
     {
         if (scene.name != GameSceneName)
         {
             return;
         }
 
-        GameSceneReferences sceneReferences = FindObjectOfType<GameSceneReferences>();
+        GameSceneReferences sceneReferences =
+            FindObjectOfType<GameSceneReferences>();
 
         if (sceneReferences == null)
         {
-            Debug.LogError("GameSceneReferences was not found in the Game scene.");
+            Debug.LogError(
+                "GameSceneReferences was not found in the Game scene."
+            );
 
             return;
         }
 
-        compositionRoot.InitializeGameplay(sceneReferences.FloorDefinition, sceneReferences.FloorView);
+        compositionRoot.InitializeGameplay(
+            sceneReferences.FloorDefinition,
+            sceneReferences.FloorView
+        );
 
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded -=
+            OnSceneLoaded;
     }
 
 
     private void OnDestroy()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded -=
+            OnSceneLoaded;
 
         compositionRoot?.Dispose();
     }

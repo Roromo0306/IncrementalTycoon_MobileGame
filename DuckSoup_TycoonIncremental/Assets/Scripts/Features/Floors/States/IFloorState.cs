@@ -9,4 +9,6 @@ public interface IFloorState
     void Exit();
 
     void HandleGenerate();
+
+    void Tick();
 }
