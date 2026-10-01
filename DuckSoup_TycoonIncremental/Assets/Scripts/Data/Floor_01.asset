@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Floor_01
   m_EditorClassIdentifier: 
   id: 0
-  floorName: 
+  floorName: SoupStand
   unlockCost: 0
-  baseIncome: 0
+  baseIncome: 5
   progressPerTap: 0.1
   automaticDuration: 10
