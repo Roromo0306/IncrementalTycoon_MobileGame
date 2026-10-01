@@ -64,7 +64,8 @@ public class GameBootstrapper : MonoBehaviour
 
         compositionRoot.InitializeGameplay(
             sceneReferences.FloorDefinition,
-            sceneReferences.FloorView
+            sceneReferences.FloorView,
+            sceneReferences.EconomyView
         );
 
         SceneManager.sceneLoaded -=

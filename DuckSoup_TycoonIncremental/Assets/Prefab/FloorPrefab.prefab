@@ -319,9 +319,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   incomeText: {fileID: 6360978582436641225}
+  automaticTimeText: {fileID: 0}
   progressBar: {fileID: 5032447010452869582}
+  progressFill: {fileID: 0}
   generateButton: {fileID: 841678769603371536}
   upgradeButton: {fileID: 6170687368827107835}
+  progressAnimationSpeed: 1
+  rainbowSpeed: 0.35
 --- !u!1 &2347201538017580645
 GameObject:
   m_ObjectHideFlags: 0

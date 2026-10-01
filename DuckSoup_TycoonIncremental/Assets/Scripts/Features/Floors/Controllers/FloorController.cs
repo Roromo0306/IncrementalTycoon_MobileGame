@@ -6,20 +6,14 @@ public class FloorController : IDisposable
     private readonly FloorRuntimeModel runtimeModel;
     private readonly FloorView view;
     private readonly FloorStateMachine stateMachine;
+    private readonly IUpgradeService upgradeService;
 
     private bool isDisposed;
 
 
-    public FloorController(
-        FloorDefinitionSO definition,
-        FloorRuntimeModel runtimeModel,
-        FloorView view,
-        FloorStateMachine stateMachine)
+    public FloorController(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, FloorView view, FloorStateMachine stateMachine, IUpgradeService upgradeService)
     {
-        this.definition = definition
-            ?? throw new ArgumentNullException(
-                nameof(definition)
-            );
+        this.definition = definition ?? throw new ArgumentNullException(nameof(definition));
 
         this.runtimeModel = runtimeModel
             ?? throw new ArgumentNullException(
@@ -36,17 +30,21 @@ public class FloorController : IDisposable
                 nameof(stateMachine)
             );
 
+        this.upgradeService = upgradeService ?? throw new ArgumentNullException(nameof(upgradeService));
+
         SubscribeToView();
 
         RenderStaticData();
         RenderDynamicData();
+        this.upgradeService = upgradeService;
     }
 
 
     private void SubscribeToView()
     {
-        view.GeneratePressed +=
-            OnGeneratePressed;
+        view.GeneratePressed += OnGeneratePressed;
+
+        view.UpgradePressed += OnUpgradePressed;
     }
 
 
@@ -68,14 +66,9 @@ public class FloorController : IDisposable
 
     private void RenderStaticData()
     {
-        view.SetIncome(
-            definition.BaseIncome
-                .ToFormattedString()
-        );
+        view.SetIncome(definition.BaseIncome.ToFormattedString());
 
-        view.SetUpgradeButtonInteractable(
-            false
-        );
+        view.SetUpgradeButtonInteractable(upgradeService.CanPurchaseUpgrade(definition, runtimeModel));
     }
 
 
@@ -114,6 +107,18 @@ public class FloorController : IDisposable
         view.GeneratePressed -=
             OnGeneratePressed;
 
+        view.UpgradePressed -= OnUpgradePressed;
+
         isDisposed = true;
+    }
+
+    private void OnUpgradePressed()
+    {
+        upgradeService.TryPurchaseUpgrade(
+            definition,
+            runtimeModel
+        );
+
+        RenderDynamicData();
     }
 }

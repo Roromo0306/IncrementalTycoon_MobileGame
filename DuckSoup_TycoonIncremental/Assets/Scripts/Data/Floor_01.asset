@@ -17,4 +17,20 @@ MonoBehaviour:
   unlockCost: 0
   baseIncome: 5
   progressPerTap: 0.1
+  manualDecayDelay: 1.5
+  manualDecayPerSecond: 0.1
   automaticDuration: 10
+  automaticIncomeInterval: 1
+  upgrades:
+  - level: 1
+    cost: 25
+    visualStage: 1
+  - level: 2
+    cost: 75
+    visualStage: 2
+  - level: 3
+    cost: 200
+    visualStage: 3
+  - level: 4
+    cost: 500
+    visualStage: 4

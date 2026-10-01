@@ -14,6 +14,8 @@ public class GameCompositionRoot : IDisposable
     private FloorRuntimeModel floorRuntimeModel;
     private FloorStateMachine floorStateMachine;
     private FloorController floorController;
+    private IUpgradeService upgradeService;
+    private EconomyController economyController;
 
 
     public void Build()
@@ -21,67 +23,41 @@ public class GameCompositionRoot : IDisposable
         CreateCoreServices();
         CreateGameServices();
 
-        Debug.Log(
-            "GameCompositionRoot: Dependencies created."
-        );
+        Debug.Log("GameCompositionRoot: Dependencies created.");
     }
 
 
     private void CreateCoreServices()
     {
-        eventBus =
-            new EventBus();
+        eventBus = new EventBus();
 
-        timeService =
-            new UnityTimeService();
+        timeService = new UnityTimeService();
     }
 
 
     private void CreateGameServices()
     {
-        economyModel =
-            new EconomyModel(
-                new Money(100)
-            );
+        economyModel = new EconomyModel(new Money(100));
 
-        economyService =
-            new EconomyService(
-                economyModel,
-                eventBus
-            );
+        economyService = new EconomyService(economyModel,eventBus);
 
-        productionService =
-            new ProductionService(
-                economyService
-            );
+        productionService = new ProductionService(economyService);
+
+        upgradeService = new UpgradeService(economyService,eventBus);
+
+        eventBus.Subscribe<UpgradePurchasedEvent>(OnUpgradePurchased);
     }
 
 
-    public void InitializeGameplay(
-        FloorDefinitionSO definition,
-        FloorView view)
+    public void InitializeGameplay(FloorDefinitionSO definition,FloorView view, EconomyView economyView)
     {
-        floorRuntimeModel =
-            new FloorRuntimeModel(
-                definition.Id,
-                true
-            );
+        floorRuntimeModel = new FloorRuntimeModel(definition.Id,true);
 
-        floorStateMachine =
-            new FloorStateMachine(
-                definition,
-                floorRuntimeModel,
-                productionService,
-                timeService
-            );
+        floorStateMachine = new FloorStateMachine(definition, floorRuntimeModel, productionService, timeService);
 
-        floorController =
-            new FloorController(
-                definition,
-                floorRuntimeModel,
-                view,
-                floorStateMachine
-            );
+        floorController = new FloorController(definition, floorRuntimeModel, view, floorStateMachine, upgradeService);
+
+        economyController = new EconomyController(economyService, eventBus, economyView);
     }
 
 
@@ -94,5 +70,15 @@ public class GameCompositionRoot : IDisposable
     public void Dispose()
     {
         floorController?.Dispose();
+        economyController?.Dispose();
+    }
+
+    private void OnUpgradePurchased(UpgradePurchasedEvent upgradeEvent)
+    {
+        Debug.Log(
+            $"Upgrade purchased - Floor: {upgradeEvent.FloorId}, " +
+            $"Level: {upgradeEvent.UpgradeLevel}, " +
+            $"Visual: {upgradeEvent.VisualStage}"
+        );
     }
 }

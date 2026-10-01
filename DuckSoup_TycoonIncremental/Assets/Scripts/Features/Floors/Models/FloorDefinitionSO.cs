@@ -4,33 +4,29 @@ using UnityEngine;
 public class FloorDefinitionSO : ScriptableObject
 {
     [Header("Identity")]
-
     [SerializeField] private int id;
-
     [SerializeField] private string floorName;
 
 
     [Header("Economy")]
-
     [Min(0)][SerializeField] private double unlockCost;
-
     [Min(0)][SerializeField] private double baseIncome;
 
 
     [Header("Manual Production")]
-
     [Range(0.01f, 1f)] [SerializeField]private float progressPerTap = 0.1f;
-
     [Min(0f)][SerializeField] private float manualDecayDelay = 1.5f;
-
     [Min(0f)][SerializeField] private float manualDecayPerSecond = 0.1f;
 
 
     [Header("Automatic Production")]
-
     [Min(0.1f)][SerializeField] private float automaticDuration = 10f;
-
     [Min(0.1f)][SerializeField] private float automaticIncomeInterval = 1f;
+
+    [Header("Upgrades")]
+
+    [SerializeField]
+    private UpgradeDefinition[] upgrades;
 
 
     public int Id => id;
@@ -50,4 +46,6 @@ public class FloorDefinitionSO : ScriptableObject
     public float AutomaticDuration => automaticDuration;
 
     public float AutomaticIncomeInterval => automaticIncomeInterval;
+
+    public UpgradeDefinition[] Upgrades => upgrades;                
 }
