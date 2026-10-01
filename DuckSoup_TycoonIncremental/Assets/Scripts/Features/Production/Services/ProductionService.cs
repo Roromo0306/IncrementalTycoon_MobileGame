@@ -7,11 +7,11 @@ public class ProductionService : IProductionService
 
     public ProductionService(IEconomyService economyService)
     {
-        this.economyService = economyService ?? throw new ArgumentNullException( nameof(economyService));
+        this.economyService = economyService ?? throw new ArgumentNullException(nameof(economyService));
     }
 
 
-    public void GenerateManual(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel)
+    public bool GenerateManual(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel)
     {
         if (definition == null)
         {
@@ -23,39 +23,31 @@ public class ProductionService : IProductionService
             throw new ArgumentNullException(nameof(runtimeModel));
         }
 
-        if (!runtimeModel.IsUnlocked)
-        {
-            return;
-        }
-
-        if (runtimeModel.AutomaticTimeRemaining > 0f)
-        {
-            return;
-        }
-
         AddManualProgress(definition, runtimeModel);
 
         if (runtimeModel.Progress < 1f)
         {
-            return;
+            return false;
         }
 
-        CompleteManualProduction(definition, runtimeModel);
+        CompleteManualProduction(
+            definition
+        );
+
+        return true;
     }
 
 
-    private void AddManualProgress(FloorDefinitionSO definition,FloorRuntimeModel runtimeModel)
+    private void AddManualProgress(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel)
     {
-        float newProgress =runtimeModel.Progress + definition.ProgressPerTap;
+        float newProgress = runtimeModel.Progress + definition.ProgressPerTap;
 
         runtimeModel.SetProgress(newProgress);
     }
 
 
-    private void CompleteManualProduction(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel)
+    private void CompleteManualProduction(FloorDefinitionSO definition)
     {
         economyService.AddMoney(definition.BaseIncome);
-
-        runtimeModel.SetAutomaticTimeRemaining(definition.AutomaticDuration);
     }
 }

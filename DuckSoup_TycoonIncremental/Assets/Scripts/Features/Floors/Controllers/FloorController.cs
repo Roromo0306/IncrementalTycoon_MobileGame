@@ -5,12 +5,12 @@ public class FloorController : IDisposable
     private readonly FloorDefinitionSO definition;
     private readonly FloorRuntimeModel runtimeModel;
     private readonly FloorView view;
-    private readonly IProductionService productionService;
+    private readonly FloorStateMachine stateMachine;
 
     private bool isDisposed;
 
 
-    public FloorController(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, FloorView view, IProductionService productionService)
+    public FloorController(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, FloorView view, FloorStateMachine stateMachine)
     {
         this.definition = definition ?? throw new ArgumentNullException(nameof(definition));
 
@@ -18,7 +18,7 @@ public class FloorController : IDisposable
 
         this.view = view ?? throw new ArgumentNullException(nameof(view));
 
-        this.productionService = productionService ?? throw new ArgumentNullException(nameof(productionService));
+        this.stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
 
         SubscribeToView();
 
@@ -34,12 +34,7 @@ public class FloorController : IDisposable
 
     private void OnGeneratePressed()
     {
-        if (!runtimeModel.IsUnlocked)
-        {
-            return;
-        }
-
-        productionService.GenerateManual(definition, runtimeModel);
+        stateMachine.HandleGenerate();
 
         Render();
     }
@@ -51,11 +46,11 @@ public class FloorController : IDisposable
 
         view.SetProgress(runtimeModel.Progress);
 
-        bool canGenerate =runtimeModel.IsUnlocked && runtimeModel.AutomaticTimeRemaining <= 0f;
-
-        view.SetGenerateButtonInteractable(canGenerate);
+        view.SetGenerateButtonInteractable(stateMachine.CanGenerate);
 
         view.SetUpgradeButtonInteractable(false);
+
+        UnityEngine.Debug.Log($"Floor State: {stateMachine.CurrentStateType}");
     }
 
 

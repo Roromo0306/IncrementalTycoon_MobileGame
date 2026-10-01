@@ -12,6 +12,7 @@ public class GameCompositionRoot : IDisposable
 
     private FloorRuntimeModel floorRuntimeModel;
     private FloorController floorController;
+    private FloorStateMachine floorStateMachine;
 
 
     public void Build()
@@ -43,7 +44,9 @@ public class GameCompositionRoot : IDisposable
     {
         floorRuntimeModel = new FloorRuntimeModel(definition.Id, true);
 
-        floorController = new FloorController(definition, floorRuntimeModel, view, productionService);
+        floorStateMachine = new FloorStateMachine(definition, floorRuntimeModel,productionService);
+
+        floorController = new FloorController(definition, floorRuntimeModel, view, floorStateMachine);
     }
 
 

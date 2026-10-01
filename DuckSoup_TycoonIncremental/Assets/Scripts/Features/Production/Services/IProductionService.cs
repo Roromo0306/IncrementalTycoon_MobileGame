@@ -1,4 +1,4 @@
 public interface IProductionService
 {
-    void GenerateManual(FloorDefinitionSO definition,FloorRuntimeModel runtimeModel);
+    bool GenerateManual( FloorDefinitionSO definition, FloorRuntimeModel runtimeModel);
 }
