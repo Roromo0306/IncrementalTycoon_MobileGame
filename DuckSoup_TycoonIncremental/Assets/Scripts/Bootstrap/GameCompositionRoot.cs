@@ -13,6 +13,7 @@ public class GameCompositionRoot : IDisposable
     private FloorRuntimeModel floorRuntimeModel;
     private FloorController floorController;
     private FloorStateMachine floorStateMachine;
+    private ITimeService timeService;
 
 
     public void Build()
@@ -27,6 +28,7 @@ public class GameCompositionRoot : IDisposable
     private void CreateCoreServices()
     {
         eventBus = new EventBus();
+        timeService = new UnityTimeService();
     }
 
 
