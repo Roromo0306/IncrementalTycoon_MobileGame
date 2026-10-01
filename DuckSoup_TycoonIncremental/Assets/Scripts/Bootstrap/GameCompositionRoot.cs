@@ -16,6 +16,7 @@ public class GameCompositionRoot : IDisposable
     private FloorController floorController;
     private IUpgradeService upgradeService;
     private EconomyController economyController;
+    private IIncomeCalculator incomeCalculator;
 
 
     public void Build()
@@ -41,7 +42,15 @@ public class GameCompositionRoot : IDisposable
 
         economyService = new EconomyService(economyModel,eventBus);
 
-        productionService = new ProductionService(economyService);
+        IIncomeModifier[] incomeModifiers =
+        {
+            new UpgradeIncomeModifier()
+        };
+
+        incomeCalculator = new IncomeCalculator(incomeModifiers);
+
+
+        productionService = new ProductionService(economyService,incomeCalculator);
 
         upgradeService = new UpgradeService(economyService,eventBus);
 
@@ -55,7 +64,7 @@ public class GameCompositionRoot : IDisposable
 
         floorStateMachine = new FloorStateMachine(definition, floorRuntimeModel, productionService, timeService);
 
-        floorController = new FloorController(definition, floorRuntimeModel, view, floorStateMachine, upgradeService);
+        floorController = new FloorController(definition, floorRuntimeModel, view, floorStateMachine, upgradeService, incomeCalculator);
 
         economyController = new EconomyController(economyService, eventBus, economyView);
     }

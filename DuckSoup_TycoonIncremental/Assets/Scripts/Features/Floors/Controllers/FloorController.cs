@@ -7,11 +7,12 @@ public class FloorController : IDisposable
     private readonly FloorView view;
     private readonly FloorStateMachine stateMachine;
     private readonly IUpgradeService upgradeService;
+    private readonly IIncomeCalculator incomeCalculator;
 
     private bool isDisposed;
 
 
-    public FloorController(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, FloorView view, FloorStateMachine stateMachine, IUpgradeService upgradeService)
+    public FloorController(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel, FloorView view, FloorStateMachine stateMachine, IUpgradeService upgradeService, IIncomeCalculator incomeCalculator)
     {
         this.definition = definition ?? throw new ArgumentNullException(nameof(definition));
 
@@ -32,11 +33,14 @@ public class FloorController : IDisposable
 
         this.upgradeService = upgradeService ?? throw new ArgumentNullException(nameof(upgradeService));
 
+        this.incomeCalculator = incomeCalculator ?? throw new ArgumentNullException(nameof(incomeCalculator));
+
         SubscribeToView();
 
         RenderStaticData();
         RenderDynamicData();
         this.upgradeService = upgradeService;
+        this.incomeCalculator = incomeCalculator;
     }
 
 
@@ -74,6 +78,14 @@ public class FloorController : IDisposable
 
     private void RenderDynamicData()
     {
+        IncomeContext incomeContext = new IncomeContext(definition, runtimeModel);
+
+        Money currentIncome = incomeCalculator.Calculate(definition.BaseIncome, incomeContext);
+
+        view.SetIncome(
+            currentIncome.ToFormattedString()
+        );
+
         view.SetProgress(
             runtimeModel.Progress
         );

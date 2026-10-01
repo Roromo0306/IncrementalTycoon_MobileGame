@@ -91,7 +91,7 @@ public class FloorAutomaticState : IFloorState
 
         while (automaticIncomeElapsed >= interval)
         {
-            productionService.GenerateAutomaticIncome(definition);
+            productionService.GenerateAutomaticIncome(definition, runtimeModel);
 
             automaticIncomeElapsed -= interval;
         }

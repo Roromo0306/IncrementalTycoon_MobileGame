@@ -24,13 +24,17 @@ MonoBehaviour:
   upgrades:
   - level: 1
     cost: 25
+    incomeMultiplier: 1.5
     visualStage: 1
   - level: 2
     cost: 75
+    incomeMultiplier: 1.5
     visualStage: 2
   - level: 3
     cost: 200
+    incomeMultiplier: 1.5
     visualStage: 3
   - level: 4
     cost: 500
+    incomeMultiplier: 1.5
     visualStage: 4
