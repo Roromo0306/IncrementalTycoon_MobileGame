@@ -6,7 +6,8 @@ public class GameBootstrapper : MonoBehaviour
     private const string GameSceneName =
         "Game";
 
-    private GameCompositionRoot compositionRoot;
+    private GameCompositionRoot
+        compositionRoot;
 
 
     private void Awake()
@@ -51,7 +52,9 @@ public class GameBootstrapper : MonoBehaviour
         }
 
         GameSceneReferences sceneReferences =
-            FindObjectOfType<GameSceneReferences>();
+            FindObjectOfType<
+                GameSceneReferences
+            >();
 
         if (sceneReferences == null)
         {
@@ -63,8 +66,8 @@ public class GameBootstrapper : MonoBehaviour
         }
 
         compositionRoot.InitializeGameplay(
-            sceneReferences.FloorDefinition,
-            sceneReferences.FloorView,
+            sceneReferences.FloorDefinitions,
+            sceneReferences.TowerView,
             sceneReferences.EconomyView
         );
 

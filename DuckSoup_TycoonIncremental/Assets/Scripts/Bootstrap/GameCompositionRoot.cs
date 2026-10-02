@@ -19,9 +19,12 @@ public class GameCompositionRoot : IDisposable
 
     private EconomyController economyController;
 
-    private readonly Dictionary<int, FloorRuntimeModel>floorRuntimeModels = new();
 
-    private readonly List<FloorInstance>floorInstances = new();
+    private readonly Dictionary<int, FloorRuntimeModel>
+        floorRuntimeModels = new();
+
+    private readonly List<FloorInstance>
+        floorInstances = new();
 
 
     public void Build()
@@ -29,60 +32,237 @@ public class GameCompositionRoot : IDisposable
         CreateCoreServices();
         CreateGameServices();
 
-        Debug.Log("GameCompositionRoot: Dependencies created.");
+        Debug.Log(
+            "GameCompositionRoot: Dependencies created."
+        );
     }
 
 
     private void CreateCoreServices()
     {
-        eventBus = new EventBus();
+        eventBus =
+            new EventBus();
 
-        timeService = new UnityTimeService();
+        timeService =
+            new UnityTimeService();
     }
 
 
     private void CreateGameServices()
     {
-        economyModel = new EconomyModel(new Money(100));
+        economyModel =
+            new EconomyModel(
+                new Money(100)
+            );
 
-        economyService =new EconomyService(economyModel,eventBus);
-
-
-        IIncomeModifier[] incomeModifiers ={new UpgradeIncomeModifier()};
-
-        incomeCalculator =new IncomeCalculator(incomeModifiers);
-
-
-        productionService = new ProductionService(economyService,incomeCalculator);
-
-
-        upgradeService = new UpgradeService(economyService,eventBus);
+        economyService =
+            new EconomyService(
+                economyModel,
+                eventBus
+            );
 
 
-        floorProgressionService = new FloorProgressionService(economyService,eventBus);
+        IIncomeModifier[] incomeModifiers =
+        {
+            new UpgradeIncomeModifier()
+        };
+
+        incomeCalculator =
+            new IncomeCalculator(
+                incomeModifiers
+            );
 
 
-        floorFactory = new FloorFactory(productionService,timeService,upgradeService,incomeCalculator,eventBus);
+        productionService =
+            new ProductionService(
+                economyService,
+                incomeCalculator
+            );
+
+
+        upgradeService =
+            new UpgradeService(
+                economyService,
+                eventBus
+            );
+
+
+        floorProgressionService =
+            new FloorProgressionService(
+                economyService,
+                eventBus
+            );
+
+
+        floorFactory =
+            new FloorFactory(
+                productionService,
+                timeService,
+                upgradeService,
+                incomeCalculator,
+                floorProgressionService,
+                eventBus
+            );
     }
 
 
-    public void InitializeGameplay(FloorDefinitionSO definition,FloorView view,EconomyView economyView)
+    public void InitializeGameplay(
+        FloorDefinitionSO[] definitions,
+        TowerView towerView,
+        EconomyView economyView)
     {
-        economyController = new EconomyController(economyService,eventBus,economyView);
+        if (definitions == null
+            || definitions.Length == 0)
+        {
+            throw new ArgumentException(
+                "At least one floor definition is required.",
+                nameof(definitions)
+            );
+        }
 
-        FloorRuntimeModel runtimeModel = new FloorRuntimeModel(definition.Id,true);
+        if (towerView == null)
+        {
+            throw new ArgumentNullException(
+                nameof(towerView)
+            );
+        }
 
-        floorRuntimeModels.Add(definition.Id,runtimeModel);
+        if (economyView == null)
+        {
+            throw new ArgumentNullException(
+                nameof(economyView)
+            );
+        }
 
-        FloorInstance floorInstance =floorFactory.Create(definition,runtimeModel,view);
 
-        floorInstances.Add(floorInstance);
+        economyController =
+            new EconomyController(
+                economyService,
+                eventBus,
+                economyView
+            );
+
+
+        List<FloorDefinitionSO>
+            orderedDefinitions =
+                new List<FloorDefinitionSO>(
+                    definitions
+                );
+
+        orderedDefinitions.Sort(
+            (first, second) =>
+                first.Id.CompareTo(
+                    second.Id
+                )
+        );
+
+
+        CreateRuntimeModels(
+            orderedDefinitions
+        );
+
+        CreateFloorInstances(
+            orderedDefinitions,
+            towerView
+        );
+
+        towerView.ScrollToBottom();
+    }
+
+
+    private void CreateRuntimeModels(
+        IReadOnlyList<FloorDefinitionSO>
+            definitions)
+    {
+        for (int i = 0;
+             i < definitions.Count;
+             i++)
+        {
+            FloorDefinitionSO definition =
+                definitions[i];
+
+            if (definition == null)
+            {
+                throw new InvalidOperationException(
+                    $"Floor definition at index {i} is null."
+                );
+            }
+
+            if (definition.Id <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Every floor must have an ID greater than zero."
+                );
+            }
+
+            if (floorRuntimeModels.ContainsKey(
+                definition.Id))
+            {
+                throw new InvalidOperationException(
+                    $"Duplicate Floor ID: {definition.Id}."
+                );
+            }
+
+
+            bool startsUnlocked =
+                definition.Id == 1;
+
+            FloorRuntimeModel runtimeModel =
+                new FloorRuntimeModel(
+                    definition.Id,
+                    startsUnlocked
+                );
+
+            floorRuntimeModels.Add(
+                definition.Id,
+                runtimeModel
+            );
+        }
+    }
+
+
+    private void CreateFloorInstances(
+        IReadOnlyList<FloorDefinitionSO>
+            definitions,
+        TowerView towerView)
+    {
+        for (int i = 0;
+             i < definitions.Count;
+             i++)
+        {
+            FloorDefinitionSO definition =
+                definitions[i];
+
+            FloorRuntimeModel runtimeModel =
+                floorRuntimeModels[
+                    definition.Id
+                ];
+
+            FloorView view =
+                towerView.CreateFloorView(
+                    definition
+                );
+
+            FloorInstance instance =
+                floorFactory.Create(
+                    definition,
+                    runtimeModel,
+                    view,
+                    floorRuntimeModels
+                );
+
+            floorInstances.Add(
+                instance
+            );
+        }
     }
 
 
     public void Tick()
     {
-        for (int i = 0; i < floorInstances.Count;i++)
+        for (int i = 0;
+             i < floorInstances.Count;
+             i++)
         {
             floorInstances[i].Tick();
         }
@@ -91,7 +271,9 @@ public class GameCompositionRoot : IDisposable
 
     public void Dispose()
     {
-        for (int i = 0;i < floorInstances.Count;i++)
+        for (int i = 0;
+             i < floorInstances.Count;
+             i++)
         {
             floorInstances[i].Dispose();
         }

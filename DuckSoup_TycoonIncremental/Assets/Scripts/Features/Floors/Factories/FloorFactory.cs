@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 public class FloorFactory
 {
@@ -6,69 +7,144 @@ public class FloorFactory
     private readonly ITimeService timeService;
     private readonly IUpgradeService upgradeService;
     private readonly IIncomeCalculator incomeCalculator;
+    private readonly IFloorProgressionService
+        floorProgressionService;
     private readonly IEventBus eventBus;
 
 
-    public FloorFactory(IProductionService productionService,ITimeService timeService,IUpgradeService upgradeService,IIncomeCalculator incomeCalculator,IEventBus eventBus)
+    public FloorFactory(
+        IProductionService productionService,
+        ITimeService timeService,
+        IUpgradeService upgradeService,
+        IIncomeCalculator incomeCalculator,
+        IFloorProgressionService floorProgressionService,
+        IEventBus eventBus)
     {
-        this.productionService = productionService ?? throw new ArgumentNullException(nameof(productionService));
+        this.productionService = productionService
+            ?? throw new ArgumentNullException(
+                nameof(productionService)
+            );
 
-        this.timeService = timeService ?? throw new ArgumentNullException(nameof(timeService));
+        this.timeService = timeService
+            ?? throw new ArgumentNullException(
+                nameof(timeService)
+            );
 
-        this.upgradeService = upgradeService ?? throw new ArgumentNullException(nameof(upgradeService));
+        this.upgradeService = upgradeService
+            ?? throw new ArgumentNullException(
+                nameof(upgradeService)
+            );
 
-        this.incomeCalculator = incomeCalculator ?? throw new ArgumentNullException(nameof(incomeCalculator));
+        this.incomeCalculator = incomeCalculator
+            ?? throw new ArgumentNullException(
+                nameof(incomeCalculator)
+            );
 
-        this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+        this.floorProgressionService =
+            floorProgressionService
+            ?? throw new ArgumentNullException(
+                nameof(floorProgressionService)
+            );
+
+        this.eventBus = eventBus
+            ?? throw new ArgumentNullException(
+                nameof(eventBus)
+            );
     }
 
 
-    public FloorInstance Create(FloorDefinitionSO definition,FloorRuntimeModel runtimeModel,FloorView view)
+    public FloorInstance Create(
+        FloorDefinitionSO definition,
+        FloorRuntimeModel runtimeModel,
+        FloorView view,
+        IReadOnlyDictionary<int, FloorRuntimeModel>
+            allRuntimeModels)
     {
-        ValidateParameters(definition,runtimeModel,view);
+        ValidateParameters(
+            definition,
+            runtimeModel,
+            view,
+            allRuntimeModels
+        );
 
-        FloorStateMachine stateMachine = CreateStateMachine(definition,runtimeModel);
+        FloorStateMachine stateMachine =
+            new FloorStateMachine(
+                definition,
+                runtimeModel,
+                productionService,
+                timeService
+            );
 
-        FloorController floorController = CreateFloorController(definition,runtimeModel,view,stateMachine);
+        FloorController floorController =
+            new FloorController(
+                definition,
+                runtimeModel,
+                view,
+                stateMachine,
+                upgradeService,
+                incomeCalculator,
+                floorProgressionService,
+                allRuntimeModels
+            );
 
-        FloorVisualController visualController = new FloorVisualController(definition,runtimeModel,view,eventBus);
+        FloorVisualController visualController =
+            new FloorVisualController(
+                definition,
+                runtimeModel,
+                view,
+                eventBus
+            );
 
-        return new FloorInstance(definition,runtimeModel,floorController,visualController);
+        return new FloorInstance(
+            definition,
+            runtimeModel,
+            floorController,
+            visualController
+        );
     }
 
 
-    private FloorStateMachine CreateStateMachine(FloorDefinitionSO definition,FloorRuntimeModel runtimeModel)
-    {
-        return new FloorStateMachine(definition,runtimeModel,productionService,timeService);
-    }
-
-
-    private FloorController CreateFloorController(FloorDefinitionSO definition,FloorRuntimeModel runtimeModel,FloorView view,FloorStateMachine stateMachine)
-    {
-        return new FloorController(definition,runtimeModel,view,stateMachine,upgradeService,incomeCalculator);
-    }
-
-
-    private void ValidateParameters(FloorDefinitionSO definition,FloorRuntimeModel runtimeModel,FloorView view)
+    private void ValidateParameters(
+        FloorDefinitionSO definition,
+        FloorRuntimeModel runtimeModel,
+        FloorView view,
+        IReadOnlyDictionary<int, FloorRuntimeModel>
+            allRuntimeModels)
     {
         if (definition == null)
         {
-            throw new ArgumentNullException(nameof(definition));
+            throw new ArgumentNullException(
+                nameof(definition)
+            );
         }
 
         if (runtimeModel == null)
         {
-            throw new ArgumentNullException(nameof(runtimeModel));
+            throw new ArgumentNullException(
+                nameof(runtimeModel)
+            );
         }
 
         if (view == null)
         {
-            throw new ArgumentNullException(nameof(view));
+            throw new ArgumentNullException(
+                nameof(view)
+            );
         }
 
-        if (definition.Id != runtimeModel.FloorId)
+        if (allRuntimeModels == null)
         {
-            throw new ArgumentException("Floor definition and runtime model must use the same Floor ID.");
+            throw new ArgumentNullException(
+                nameof(allRuntimeModels)
+            );
+        }
+
+        if (definition.Id
+            != runtimeModel.FloorId)
+        {
+            throw new ArgumentException(
+                "Floor definition and runtime model must use the same Floor ID."
+            );
         }
     }
 }
