@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameCompositionRoot : IDisposable
@@ -9,15 +10,18 @@ public class GameCompositionRoot : IDisposable
     private EconomyModel economyModel;
     private IEconomyService economyService;
 
-    private IProductionService productionService;
-
-    private FloorRuntimeModel floorRuntimeModel;
-    private FloorStateMachine floorStateMachine;
-    private FloorController floorController;
-    private IUpgradeService upgradeService;
-    private EconomyController economyController;
     private IIncomeCalculator incomeCalculator;
-    private FloorVisualController floorVisualController;
+    private IProductionService productionService;
+    private IUpgradeService upgradeService;
+    private IFloorProgressionService floorProgressionService;
+
+    private FloorFactory floorFactory;
+
+    private EconomyController economyController;
+
+    private readonly Dictionary<int, FloorRuntimeModel>floorRuntimeModels = new();
+
+    private readonly List<FloorInstance>floorInstances = new();
 
 
     public void Build()
@@ -41,57 +45,60 @@ public class GameCompositionRoot : IDisposable
     {
         economyModel = new EconomyModel(new Money(100));
 
-        economyService = new EconomyService(economyModel,eventBus);
+        economyService =new EconomyService(economyModel,eventBus);
 
-        IIncomeModifier[] incomeModifiers =
-        {
-            new UpgradeIncomeModifier()
-        };
 
-        incomeCalculator = new IncomeCalculator(incomeModifiers);
+        IIncomeModifier[] incomeModifiers ={new UpgradeIncomeModifier()};
+
+        incomeCalculator =new IncomeCalculator(incomeModifiers);
 
 
         productionService = new ProductionService(economyService,incomeCalculator);
 
+
         upgradeService = new UpgradeService(economyService,eventBus);
 
-        eventBus.Subscribe<UpgradePurchasedEvent>(OnUpgradePurchased);
+
+        floorProgressionService = new FloorProgressionService(economyService,eventBus);
+
+
+        floorFactory = new FloorFactory(productionService,timeService,upgradeService,incomeCalculator,eventBus);
     }
 
 
-    public void InitializeGameplay(FloorDefinitionSO definition,FloorView view, EconomyView economyView)
+    public void InitializeGameplay(FloorDefinitionSO definition,FloorView view,EconomyView economyView)
     {
-        floorRuntimeModel = new FloorRuntimeModel(definition.Id,true);
+        economyController = new EconomyController(economyService,eventBus,economyView);
 
-        floorStateMachine = new FloorStateMachine(definition, floorRuntimeModel, productionService, timeService);
+        FloorRuntimeModel runtimeModel = new FloorRuntimeModel(definition.Id,true);
 
-        floorController = new FloorController(definition, floorRuntimeModel, view, floorStateMachine, upgradeService, incomeCalculator);
+        floorRuntimeModels.Add(definition.Id,runtimeModel);
 
-        floorVisualController = new FloorVisualController(definition, floorRuntimeModel, view, eventBus);
+        FloorInstance floorInstance =floorFactory.Create(definition,runtimeModel,view);
 
-        economyController = new EconomyController(economyService, eventBus, economyView);
+        floorInstances.Add(floorInstance);
     }
 
 
     public void Tick()
     {
-        floorController?.Tick();
+        for (int i = 0; i < floorInstances.Count;i++)
+        {
+            floorInstances[i].Tick();
+        }
     }
 
 
     public void Dispose()
     {
-        floorController?.Dispose();
-        economyController?.Dispose();
-        floorVisualController?.Dispose();
-    }
+        for (int i = 0;i < floorInstances.Count;i++)
+        {
+            floorInstances[i].Dispose();
+        }
 
-    private void OnUpgradePurchased(UpgradePurchasedEvent upgradeEvent)
-    {
-        Debug.Log(
-            $"Upgrade purchased - Floor: {upgradeEvent.FloorId}, " +
-            $"Level: {upgradeEvent.UpgradeLevel}, " +
-            $"Visual: {upgradeEvent.VisualStage}"
-        );
+        floorInstances.Clear();
+        floorRuntimeModels.Clear();
+
+        economyController?.Dispose();
     }
 }

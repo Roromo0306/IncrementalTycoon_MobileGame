@@ -16,6 +16,21 @@ public class UpgradeService : IUpgradeService
 
     public bool CanPurchaseUpgrade(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel)
     {
+        if (definition == null)
+        {
+            throw new ArgumentNullException(nameof(definition));
+        }
+
+        if (runtimeModel == null)
+        {
+            throw new ArgumentNullException(nameof(runtimeModel));
+        }
+
+        if (!runtimeModel.IsUnlocked)
+        {
+            return false;
+        }
+
         UpgradeDefinition nextUpgrade = GetNextUpgrade(definition, runtimeModel);
 
         if (nextUpgrade == null)
@@ -29,6 +44,11 @@ public class UpgradeService : IUpgradeService
 
     public bool TryPurchaseUpgrade(FloorDefinitionSO definition, FloorRuntimeModel runtimeModel)
     {
+        if (!CanPurchaseUpgrade(definition, runtimeModel))
+        {
+        return false;
+        }
+
         UpgradeDefinition nextUpgrade = GetNextUpgrade(definition, runtimeModel);
 
         if (nextUpgrade == null)
