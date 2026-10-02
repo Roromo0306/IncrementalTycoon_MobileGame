@@ -17,6 +17,7 @@ public class GameCompositionRoot : IDisposable
     private IUpgradeService upgradeService;
     private EconomyController economyController;
     private IIncomeCalculator incomeCalculator;
+    private FloorVisualController floorVisualController;
 
 
     public void Build()
@@ -66,6 +67,8 @@ public class GameCompositionRoot : IDisposable
 
         floorController = new FloorController(definition, floorRuntimeModel, view, floorStateMachine, upgradeService, incomeCalculator);
 
+        floorVisualController = new FloorVisualController(definition, floorRuntimeModel, view, eventBus);
+
         economyController = new EconomyController(economyService, eventBus, economyView);
     }
 
@@ -80,6 +83,7 @@ public class GameCompositionRoot : IDisposable
     {
         floorController?.Dispose();
         economyController?.Dispose();
+        floorVisualController?.Dispose();
     }
 
     private void OnUpgradePurchased(UpgradePurchasedEvent upgradeEvent)

@@ -21,13 +21,14 @@ public class FloorView : MonoBehaviour
 
 
     [Header("Progress Animation")]
-
     [Min(0.1f)][SerializeField] private float progressAnimationSpeed = 1f;
 
 
     [Header("Automatic Visual")]
-
     [Min(0.1f)][SerializeField] private float rainbowSpeed = 0.35f;
+
+    [Header("Upgrade Visuals")]
+    [SerializeField] private GameObject[] upgradeVisuals;
 
 
     public event Action GeneratePressed;
@@ -166,5 +167,20 @@ public class FloorView : MonoBehaviour
         }
 
         automaticTimeText.text =$"AUTO {remainingTime:0.0}s";
+    }
+
+    public void SetVisualStage(int visualStage)
+    {
+        for (int i = 0; i < upgradeVisuals.Length; i++)
+        {
+            if (upgradeVisuals[i] == null)
+            {
+                continue;
+            }
+
+            bool shouldBeActive = i < visualStage;
+
+            upgradeVisuals[i].SetActive(shouldBeActive);
+        }
     }
 }

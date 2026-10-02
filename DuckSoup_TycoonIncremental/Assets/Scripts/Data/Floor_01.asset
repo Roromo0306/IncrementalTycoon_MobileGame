@@ -28,13 +28,13 @@ MonoBehaviour:
     visualStage: 1
   - level: 2
     cost: 75
-    incomeMultiplier: 1.5
+    incomeMultiplier: 2
     visualStage: 2
   - level: 3
     cost: 200
-    incomeMultiplier: 1.5
+    incomeMultiplier: 2.5
     visualStage: 3
   - level: 4
     cost: 500
-    incomeMultiplier: 1.5
+    incomeMultiplier: 3
     visualStage: 4
