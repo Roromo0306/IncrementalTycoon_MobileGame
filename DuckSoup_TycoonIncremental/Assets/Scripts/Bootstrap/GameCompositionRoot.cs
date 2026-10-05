@@ -15,36 +15,33 @@ public class GameCompositionRoot : IDisposable
     private IUpgradeService upgradeService;
     private IFloorProgressionService floorProgressionService;
 
-    private FloorFactory floorFactory;
+    private ISaveRepository saveRepository;
+    private SaveService saveService;
 
+    private FloorFactory floorFactory;
     private EconomyController economyController;
 
 
-    private readonly Dictionary<int, FloorRuntimeModel>
-        floorRuntimeModels = new();
+    private readonly Dictionary<int, FloorRuntimeModel>floorRuntimeModels = new();
 
-    private readonly List<FloorInstance>
-        floorInstances = new();
+    private readonly List<FloorInstance>floorInstances = new();
 
 
     public void Build()
     {
         CreateCoreServices();
         CreateGameServices();
+        CreatePersistenceServices();
 
-        Debug.Log(
-            "GameCompositionRoot: Dependencies created."
-        );
+        Debug.Log("GameCompositionRoot: Dependencies created.");
     }
 
 
     private void CreateCoreServices()
     {
-        eventBus =
-            new EventBus();
+        eventBus = new EventBus();
 
-        timeService =
-            new UnityTimeService();
+        timeService = new UnityTimeService();
     }
 
 
@@ -266,11 +263,15 @@ public class GameCompositionRoot : IDisposable
         {
             floorInstances[i].Tick();
         }
+
+        saveService?.Tick();
     }
 
 
     public void Dispose()
     {
+        saveService?.SaveGame();
+
         for (int i = 0;
              i < floorInstances.Count;
              i++)
@@ -279,8 +280,31 @@ public class GameCompositionRoot : IDisposable
         }
 
         floorInstances.Clear();
-        floorRuntimeModels.Clear();
 
         economyController?.Dispose();
+
+        saveService?.Dispose();
+
+        floorRuntimeModels.Clear();
+    }
+
+    private void CreatePersistenceServices()
+    {
+        saveRepository =
+            new JsonSaveRepository();
+
+        saveService =
+            new SaveService(
+                economyService,
+                timeService,
+                saveRepository,
+                eventBus,
+                floorRuntimeModels
+            );
+    }
+
+    public void SaveGame()
+    {
+        saveService?.SaveGame();
     }
 }

@@ -83,4 +83,21 @@ public class GameBootstrapper : MonoBehaviour
 
         compositionRoot?.Dispose();
     }
+
+    private void OnApplicationPause(
+    bool pauseStatus)
+    {
+        if (!pauseStatus)
+        {
+            return;
+        }
+
+        compositionRoot?.SaveGame();
+    }
+
+
+    private void OnApplicationQuit()
+    {
+        compositionRoot?.SaveGame();
+    }
 }
