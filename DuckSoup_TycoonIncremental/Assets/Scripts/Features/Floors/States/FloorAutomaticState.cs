@@ -34,6 +34,11 @@ public class FloorAutomaticState : IFloorState
     {
         automaticIncomeElapsed = 0f;
 
+        if (runtimeModel.AutomaticTimeRemaining > 0f)
+        {
+            return;
+        }
+
         runtimeModel.SetAutomaticTimeRemaining(definition.AutomaticDuration);
     }
 

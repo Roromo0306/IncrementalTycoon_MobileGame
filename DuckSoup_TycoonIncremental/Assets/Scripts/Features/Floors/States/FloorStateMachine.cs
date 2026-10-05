@@ -54,14 +54,21 @@ public class FloorStateMachine
                 timeService
             );
 
-        if (runtimeModel.IsUnlocked)
-        {
-            ChangeState(manualState);
-        }
-        else
+        if (!runtimeModel.IsUnlocked)
         {
             ChangeState(lockedState);
+
+            return;
         }
+
+        if (runtimeModel.AutomaticTimeRemaining > 0f)
+        {
+            ChangeState(automaticState);
+
+            return;
+        }
+
+        ChangeState(manualState);
     }
 
 

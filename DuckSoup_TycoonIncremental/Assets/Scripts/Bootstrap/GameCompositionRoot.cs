@@ -17,6 +17,7 @@ public class GameCompositionRoot : IDisposable
 
     private ISaveRepository saveRepository;
     private SaveService saveService;
+    private LoadService loadService;
 
     private FloorFactory floorFactory;
     private EconomyController economyController;
@@ -104,9 +105,9 @@ public class GameCompositionRoot : IDisposable
 
 
     public void InitializeGameplay(
-        FloorDefinitionSO[] definitions,
-        TowerView towerView,
-        EconomyView economyView)
+    FloorDefinitionSO[] definitions,
+    TowerView towerView,
+    EconomyView economyView)
     {
         if (definitions == null
             || definitions.Length == 0)
@@ -132,6 +133,21 @@ public class GameCompositionRoot : IDisposable
         }
 
 
+        GameSaveData saveData =
+            loadService.LoadGame();
+
+
+        Money loadedMoney =
+            loadService.GetMoneyOrDefault(
+                saveData,
+                new Money(100)
+            );
+
+        economyModel.SetMoney(
+            loadedMoney
+        );
+
+
         economyController =
             new EconomyController(
                 economyService,
@@ -155,7 +171,8 @@ public class GameCompositionRoot : IDisposable
 
 
         CreateRuntimeModels(
-            orderedDefinitions
+            orderedDefinitions,
+            saveData
         );
 
         CreateFloorInstances(
@@ -164,12 +181,27 @@ public class GameCompositionRoot : IDisposable
         );
 
         towerView.ScrollToBottom();
+
+
+        if (saveData == null)
+        {
+            Debug.Log(
+                "LoadService: New game created."
+            );
+        }
+        else
+        {
+            Debug.Log(
+                "LoadService: Save loaded successfully."
+            );
+        }
     }
 
 
     private void CreateRuntimeModels(
-        IReadOnlyList<FloorDefinitionSO>
-            definitions)
+     IReadOnlyList<FloorDefinitionSO>
+         definitions,
+     GameSaveData saveData)
     {
         for (int i = 0;
              i < definitions.Count;
@@ -201,14 +233,13 @@ public class GameCompositionRoot : IDisposable
             }
 
 
-            bool startsUnlocked =
-                definition.Id == 1;
-
             FloorRuntimeModel runtimeModel =
-                new FloorRuntimeModel(
-                    definition.Id,
-                    startsUnlocked
-                );
+                loadService
+                    .CreateFloorRuntimeModel(
+                        definition,
+                        saveData
+                    );
+
 
             floorRuntimeModels.Add(
                 definition.Id,
@@ -216,7 +247,6 @@ public class GameCompositionRoot : IDisposable
             );
         }
     }
-
 
     private void CreateFloorInstances(
         IReadOnlyList<FloorDefinitionSO>
@@ -292,6 +322,11 @@ public class GameCompositionRoot : IDisposable
     {
         saveRepository =
             new JsonSaveRepository();
+
+        loadService =
+            new LoadService(
+                saveRepository
+            );
 
         saveService =
             new SaveService(
